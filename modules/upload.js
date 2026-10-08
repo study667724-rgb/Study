@@ -1,5 +1,4 @@
 const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 
 // ============================================
@@ -15,19 +14,10 @@ cloudinary.config({
 console.log('☁️ Cloudinary configured:', process.env.CLOUDINARY_CLOUD_NAME ? '✅' : '❌');
 
 // ============================================
-// إعداد Multer + Cloudinary Storage
+// Multer - تخزين في الذاكرة
 // ============================================
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'studyhub',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'],
-    resource_type: 'auto'
-  }
-});
-
 const upload = multer({
-  storage: storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /image\/(jpeg|png|gif|webp)|application\/pdf/;
@@ -35,6 +25,31 @@ const upload = multer({
     else cb(new Error('يُسمح بالصور و PDF فقط'));
   }
 });
+
+// ============================================
+// رفع إلى Cloudinary
+// ============================================
+function uploadToCloudinary(buffer, mimetype) {
+  return new Promise((resolve, reject) => {
+    const resourceType = mimetype === 'application/pdf' ? 'raw' : 'image';
+    
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'studyhub',
+        resource_type: resourceType,
+        transformation: resourceType === 'image' 
+          ? [{ width: 1600, height: 1600, crop: 'limit' }, { quality: 'auto' }]
+          : undefined
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    
+    uploadStream.end(buffer);
+  });
+}
 
 const LIMITS = { perMinute: 3, perHour: 20, perDay: 50 };
 
@@ -148,28 +163,37 @@ module.exports = (app, db) => {
   app.post('/api/upload', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ ok: false });
 
-    checkRateLimit(req.session.userId, (result) => {
+    checkRateLimit(req.session.userId, async (result) => {
       if (!result.ok) {
         return res.status(429).json({ ok: false, error: result.error, retryAfter: result.retryAfter, limit: result.limit });
       }
 
-      upload.single('image')(req, res, (err) => {
+      upload.single('image')(req, res, async (err) => {
         if (err) {
           console.error('[UPLOAD ERROR]', err.message);
           return res.json({ ok: false, error: err.message });
         }
         if (!req.file) return res.json({ ok: false, error: 'لم يتم اختيار ملف' });
 
-        const filePath = req.file.path || req.file.secure_url;
-        console.log('☁️ File uploaded:', filePath);
+        try {
+          const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype);
+          console.log('☁️ File uploaded:', result.secure_url);
 
-        db.run(
-          `INSERT INTO uploads_log (user_id, ip) VALUES (?, ?)`,
-          [req.session.userId, getIP(req)],
-          () => {
-            res.json({ ok: true, path: filePath, public_id: req.file.filename || req.file.public_id });
-          }
-        );
+          db.run(
+            `INSERT INTO uploads_log (user_id, ip) VALUES (?, ?)`,
+            [req.session.userId, getIP(req)],
+            () => {
+              res.json({ 
+                ok: true, 
+                path: result.secure_url,
+                public_id: result.public_id
+              });
+            }
+          );
+        } catch (uploadError) {
+          console.error('[CLOUDINARY ERROR]', uploadError.message);
+          res.json({ ok: false, error: 'فشل رفع الصورة: ' + uploadError.message });
+        }
       });
     });
   });
