@@ -1,0 +1,11 @@
+node_modules/
+.env
+studyhub.db
+studyhub.db-shm
+studyhub.db-wal
+uploads/
+*.log
+cookies.txt
+ck.txt
+headers.txt
+backup/

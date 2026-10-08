@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0F172A">
+  <title>STUDY HUB · Access</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="auth-body">
+
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="auth-card">
+    <div class="logo-wrap">
+      <div class="logo">🚀</div>
+      <h1>STUDY HUB</h1>
+      <p class="subtitle">منصة الطلاب لمشاركة التمارين</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login', event)">دخول</button>
+      <button class="tab" onclick="switchTab('register', event)">حساب جديد</button>
+    </div>
+
+    <div id="login-form" class="form-panel active">
+      <input id="login-username" type="text" placeholder="اسم المستخدم" autocomplete="off">
+      <input id="login-password" type="password" placeholder="كلمة المرور">
+      <button class="btn-primary" onclick="doLogin()">
+        <span>دخول</span>
+        <span class="btn-arrow">→</span>
+      </button>
+      <p class="form-msg" id="login-msg"></p>
+    </div>
+
+    <div id="register-form" class="form-panel">
+      <input id="reg-fullname" type="text" placeholder="الاسم الكامل" autocomplete="off">
+      <input id="reg-username" type="text" placeholder="اسم المستخدم" autocomplete="off">
+      <input id="reg-password" type="password" placeholder="كلمة المرور">
+      <button class="btn-primary" onclick="doRegister()">
+        <span>إنشاء الحساب</span>
+        <span class="btn-arrow">→</span>
+      </button>
+      <p class="form-msg" id="register-msg"></p>
+    </div>
+
+    <div class="footer-note">
+      <span>💜 مدعوم بمستقبل التعليم</span>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // تحقق فوري: إذا كان مسجلاً، انتقل فوراً لـ /app
+    // ============================================
+    (async function checkAuth() {
+      try {
+        const r = await fetch('/api/me', { credentials: 'include' }).then(r => r.json());
+        if (r.ok) {
+          location.replace('/app');
+          return;
+        }
+      } catch (e) {}
+    })();
+
+    // ============================================
+    // CSRF Token Management
+    // ============================================
+    async function fetchFreshToken() {
+      try {
+        const r = await fetch('/api/csrf-token', { 
+          credentials: 'include',
+          cache: 'no-store'
+        }).then(r => r.json());
+        if (r.ok && r.token) {
+          return r.token;
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    async function safeFetch(url, options = {}) {
+      options.credentials = 'include';
+      options.cache = 'no-store';
+      
+      const method = (options.method || 'GET').toUpperCase();
+      if (['POST', 'PUT', 'DELETE'].includes(method)) {
+        const token = await fetchFreshToken();
+        if (!token) {
+          throw new Error('فشل جلب CSRF token');
+        }
+        options.headers = {
+          ...(options.headers || {}),
+          'X-CSRF-Token': token
+        };
+        if (options.body && typeof options.body === 'string') {
+          try {
+            const data = JSON.parse(options.body);
+            data._csrf = token;
+            options.body = JSON.stringify(data);
+          } catch (e) {}
+        }
+      }
+      return fetch(url, options);
+    }
+
+    function switchTab(name, ev) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+      if (ev && ev.target) ev.target.classList.add('active');
+      document.getElementById(name + '-form').classList.add('active');
+    }
+
+    async function doLogin() {
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      const msg = document.getElementById('login-msg');
+      
+      if (!username || !password) { msg.textContent = 'املأ جميع الحقول'; return; }
+      msg.style.color = '#94A3B8';
+      msg.textContent = 'جاري التحقق...';
+      
+      try {
+        const r = await safeFetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        }).then(r => r.json());
+
+        if (r.ok) {
+          msg.style.color = '#10b981';
+          msg.textContent = '✓ مرحباً ' + username;
+          setTimeout(() => location.replace('/app'), 400);
+        } else {
+          msg.style.color = '#EC4899';
+          msg.textContent = '✗ ' + r.error;
+        }
+      } catch (e) {
+        msg.style.color = '#EC4899';
+        msg.textContent = '✗ ' + e.message;
+      }
+    }
+
+    async function doRegister() {
+      const full_name = document.getElementById('reg-fullname').value.trim();
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const msg = document.getElementById('register-msg');
+      
+      if (!username || !password) { msg.textContent = 'املأ جميع الحقول'; return; }
+      msg.style.color = '#94A3B8';
+      msg.textContent = 'جاري الإنشاء...';
+      
+      try {
+        const r = await safeFetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, full_name })
+        }).then(r => r.json());
+
+        if (r.ok) {
+          msg.style.color = '#10b981';
+          msg.textContent = '✓ تم إنشاء الحساب';
+          setTimeout(() => location.replace('/app'), 400);
+        } else {
+          msg.style.color = '#EC4899';
+          msg.textContent = '✗ ' + r.error;
+        }
+      } catch (e) {
+        msg.style.color = '#EC4899';
+        msg.textContent = '✗ ' + e.message;
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      if (document.getElementById('login-form').classList.contains('active')) doLogin();
+      else doRegister();
+    });
+  </script>
+</body>
+</html>

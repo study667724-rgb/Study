@@ -1,0 +1,30 @@
+{
+  "name": "studyhub",
+  "version": "1.0.0",
+  "description": "Study Hub - Share & Download Exercises",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "education",
+    "exercises",
+    "students"
+  ],
+  "author": "Student",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "csrf-csrf": "^4.0.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "helmet": "^8.3.0",
+    "multer": "^1.4.5-lts.1",
+    "sqlite3": "^6.0.1"
+  },
+  "allowScripts": {
+    "sqlite3@6.0.1": true
+  }
+}

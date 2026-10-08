@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#8B5CF6">
+  <title>STUDY HUB · الرئيسية</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/themes.css">
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body class="app-body">
+
+  <header class="topbar">
+    <div class="topbar-logo" onclick="goHome()">
+      <div class="mini-logo">🚀</div>
+      <span>STUDY HUB</span>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="btn-publish" onclick="openPublish()">
+        <span>＋</span>
+        <span class="text">نشر</span>
+      </button>
+      <button class="btn-icon" onclick="openSettings()" title="الإعدادات">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="container" id="mainContent"></main>
+
+  <div class="modal-overlay" id="publishModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>📤 نشر تمرين</h2>
+        <button class="modal-close" onclick="closePublish()">✕</button>
+      </div>
+
+      <select id="pub-grade" onchange="onGradeChange()">
+        <option value="">اختر السنة الدراسية</option>
+        <option value="1ere">1ère année secondaire</option>
+        <option value="2eme">2ème année secondaire</option>
+        <option value="3eme">3ème année secondaire</option>
+        <option value="bac">Baccalauréat</option>
+      </select>
+
+      <select id="pub-branch" style="display:none" onchange="onBranchChange()">
+        <option value="">اختر الشعبة</option>
+      </select>
+
+      <select id="pub-subject">
+        <option value="">اختر المادة</option>
+      </select>
+
+      <input id="pub-title" type="text" placeholder="عنوان التمرين" maxlength="100">
+
+      <textarea id="pub-desc" placeholder="وصف مختصر (اختياري)" maxlength="500"></textarea>
+
+      <div class="file-drop" id="fileDrop" onclick="document.getElementById('pub-file').click()">
+        <div class="icon">🖼️</div>
+        <div class="label" id="fileLabel">اضغط لاختيار صورة أو PDF</div>
+        <img id="filePreview" class="file-preview" style="display:none">
+      </div>
+      <input type="file" id="pub-file" accept="image/*,application/pdf" hidden>
+
+      <div class="upload-limit-box" id="uploadLimitIndicator"></div>
+
+      <button class="btn-primary" onclick="submitPublish()" id="pubBtn">
+        <span>نشر التمرين</span>
+        <span class="btn-arrow">→</span>
+      </button>
+
+      <p class="form-msg" id="pubMsg"></p>
+    </div>
+  </div>
+
+  <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+  <div class="settings-drawer" id="settingsDrawer">
+    <div class="settings-header">
+      <h2>⚙️ الإعدادات</h2>
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <div class="settings-body">
+
+      <div class="settings-section">
+        <div class="settings-section-title">🎨 المظهر</div>
+        <div class="theme-options-grid">
+          <div class="theme-option-v2" data-theme="dark" onclick="setTheme('dark')">
+            <div class="theme-preview dark"></div>
+            <span>داكن</span>
+          </div>
+          <div class="theme-option-v2" data-theme="light" onclick="setTheme('light')">
+            <div class="theme-preview light"></div>
+            <span>فاتح</span>
+          </div>
+          <div class="theme-option-v2" data-theme="ocean" onclick="setTheme('ocean')">
+            <div class="theme-preview ocean"></div>
+            <span>محيط</span>
+          </div>
+          <div class="theme-option-v2" data-theme="sakura" onclick="setTheme('sakura')">
+            <div class="theme-preview sakura"></div>
+            <span>ساكورا</span>
+          </div>
+          <div class="theme-option-v2" data-theme="forest" onclick="setTheme('forest')">
+            <div class="theme-preview forest"></div>
+            <span>غابة</span>
+          </div>
+          <div class="theme-option-v2" data-theme="midnight" onclick="setTheme('midnight')">
+            <div class="theme-preview midnight"></div>
+            <span>منتصف الليل</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">📱 التطبيق</div>
+        <button class="settings-item" onclick="installPWA()">
+          <span class="settings-item-icon">📲</span>
+          <div class="settings-item-content">
+            <div class="settings-item-title">تثبيت كتطبيق</div>
+            <div class="settings-item-desc">أضف STUDY HUB لشاشتك الرئيسية</div>
+          </div>
+          <span class="settings-item-arrow">‹</span>
+        </button>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">👤 الحساب</div>
+        <div class="settings-profile">
+          <div class="settings-avatar" id="settingsAvatar">?</div>
+          <div class="settings-profile-info">
+            <div class="settings-profile-name" id="settingsName">...</div>
+            <div class="settings-profile-user" id="settingsUsername">@...</div>
+          </div>
+        </div>
+        <button class="settings-item danger" onclick="logout()">
+          <span class="settings-item-icon">⎋</span>
+          <div class="settings-item-content">
+            <div class="settings-item-title">تسجيل الخروج</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">ℹ️ عن</div>
+        <div class="settings-about">
+          <div class="settings-about-logo">🚀</div>
+          <div class="settings-about-name">STUDY HUB</div>
+          <div class="settings-about-version">الإصدار 1.6</div>
+          <div class="settings-about-desc">منصة الطلاب لمشاركة التمارين</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-modal">
+      <div class="welcome-bg">
+        <div class="welcome-orb welcome-orb-1"></div>
+        <div class="welcome-orb welcome-orb-2"></div>
+        <div class="welcome-orb welcome-orb-3"></div>
+      </div>
+
+      <div class="welcome-content">
+        <div class="welcome-logo">🚀</div>
+        <h1 class="welcome-title">مرحباً بك في</h1>
+        <h2 class="welcome-brand">STUDY HUB</h2>
+        <p class="welcome-subtitle">منصتك لمشاركة وحمّل التمارين المدرسية</p>
+
+        <div class="welcome-features">
+          <div class="welcome-feature">
+            <div class="welcome-feature-icon">📤</div>
+            <div class="welcome-feature-text">
+              <div class="welcome-feature-title">شارك</div>
+              <div class="welcome-feature-desc">صور تمارينك مع الطلاب</div>
+            </div>
+          </div>
+          <div class="welcome-feature">
+            <div class="welcome-feature-icon">⬇️</div>
+            <div class="welcome-feature-text">
+              <div class="welcome-feature-title">حمّل</div>
+              <div class="welcome-feature-desc">استفد من تمارين الآخرين</div>
+            </div>
+          </div>
+          <div class="welcome-feature">
+            <div class="welcome-feature-icon">🎓</div>
+            <div class="welcome-feature-text">
+              <div class="welcome-feature-title">لكل الشعب</div>
+              <div class="welcome-feature-desc">من الأولى ثانوي إلى الباكالوريا</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="welcome-btn" onclick="closeWelcome()">
+          <span>ابدأ الآن</span>
+          <span class="welcome-btn-arrow">→</span>
+        </button>
+
+        <div class="welcome-footer">
+          💜 صُنع للطلاب التونسيين
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notif-popup" id="notifPopup">
+    <div class="notif-icon">🔔</div>
+    <div class="notif-content">
+      <div class="notif-title" id="notifTitle">إشعار</div>
+      <div class="notif-message" id="notifMessage"></div>
+    </div>
+    <button class="notif-close" onclick="closeNotif()">✕</button>
+  </div>
+
+  <div class="image-modal" id="imageModal" onclick="closeImage()">
+    <button class="image-modal-close" onclick="closeImage()">✕</button>
+    <img id="imageModalImg" src="" alt="">
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="bottom-nav-btn active" onclick="goHome(); setActiveNav(this)">
+        <span class="icon">🏠</span>
+        <span>الرئيسية</span>
+      </button>
+      <button class="bottom-nav-btn" onclick="openPublish(); setActiveNav(this)">
+        <span class="icon">＋</span>
+        <span>نشر</span>
+      </button>
+      <button class="bottom-nav-btn" onclick="openSettings(); setActiveNav(this)">
+        <span class="icon">⚙️</span>
+        <span>الإعدادات</span>
+      </button>
+      <button class="bottom-nav-btn" onclick="showProfile(); setActiveNav(this)">
+        <span class="icon">👤</span>
+        <span>حسابي</span>
+      </button>
+    </div>
+  </nav>
+
+  <script src="/app.js"></script>
+  <script>
+    // منع الرجوع للخلف - المستخدم يبقى في /app
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', function(event) {
+      history.pushState(null, null, location.href);
+    });
+  </script>
+</body>
+</html>

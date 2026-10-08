@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0F172A">
+  <title>EZZI · Dashboard</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/themes.css">
+  <link rel="stylesheet" href="/ezzi.css">
+</head>
+<body class="ezzi-body">
+
+  <header class="topbar">
+    <div class="topbar-logo">
+      <div class="mini-logo">🔐</div>
+      <span>EZZI CONTROL</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-icon" onclick="ezziLogout()" title="خروج">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value" id="statUsers">-</div>
+        <div class="stat-label">مستخدمون</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📤</div>
+        <div class="stat-value" id="statPosts">-</div>
+        <div class="stat-label">منشورات</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⬇️</div>
+        <div class="stat-value" id="statDownloads">-</div>
+        <div class="stat-label">تحميلات</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🚫</div>
+        <div class="stat-value" id="statBanned">-</div>
+        <div class="stat-label">محظورون</div>
+      </div>
+    </div>
+
+    <div class="ezzi-tabs">
+      <button class="ezzi-tab active" data-tab="users" onclick="switchEzziTab('users', event)">👥 المستخدمون</button>
+      <button class="ezzi-tab" data-tab="alerts" onclick="switchEzziTab('alerts', event)">
+        🚨 التنبيهات <span class="alert-badge" id="alertsBadge" style="display:none">0</span>
+      </button>
+      <button class="ezzi-tab" data-tab="banned-users" onclick="switchEzziTab('banned-users', event)">🚫 المحظورون</button>
+      <button class="ezzi-tab" data-tab="banned-ips" onclick="switchEzziTab('banned-ips', event)">🌐 IPs محظورة</button>
+      <button class="ezzi-tab" data-tab="posts" onclick="switchEzziTab('posts', event)">📤 المنشورات</button>
+    </div>
+
+    <div class="ezzi-content" id="ezziContent">
+      <div class="loader"><div class="spinner"></div></div>
+    </div>
+
+  </main>
+
+  <script src="/ezzi.js"></script>
+  <script>
+    // منع الرجوع للخلف
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', function(event) {
+      history.pushState(null, null, location.href);
+    });
+  </script>
+</body>
+</html>

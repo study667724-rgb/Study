@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0F172A">
+  <title>EZZI · Control Panel</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/themes.css">
+</head>
+<body class="auth-body">
+
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="auth-card">
+    <div class="logo-wrap">
+      <div class="logo">🔐</div>
+      <h1>EZZI</h1>
+      <p class="subtitle">لوحة التحكم الخاصة</p>
+    </div>
+
+    <input id="ezzi-code" type="password" placeholder="رمز الدخول" autocomplete="off" spellcheck="false">
+
+    <button class="btn-primary" onclick="doEzziLogin()">
+      <span>دخول</span>
+      <span class="btn-arrow">→</span>
+    </button>
+
+    <p class="form-msg" id="msg"></p>
+
+    <div class="footer-note">
+      <span>🔒 منطقة محظورة · للمشرف فقط</span>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // CSRF Token Management
+    // ============================================
+    async function fetchFreshToken() {
+      try {
+        const r = await fetch('/api/csrf-token', { 
+          credentials: 'include',
+          cache: 'no-store'
+        }).then(r => r.json());
+        if (r.ok && r.token) {
+          return r.token;
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    async function safeFetch(url, options = {}) {
+      options.credentials = 'include';
+      options.cache = 'no-store';
+      
+      const method = (options.method || 'GET').toUpperCase();
+      if (['POST', 'PUT', 'DELETE'].includes(method)) {
+        const token = await fetchFreshToken();
+        if (!token) {
+          throw new Error('فشل جلب CSRF token');
+        }
+        options.headers = {
+          ...(options.headers || {}),
+          'X-CSRF-Token': token
+        };
+        if (options.body && typeof options.body === 'string') {
+          try {
+            const data = JSON.parse(options.body);
+            data._csrf = token;
+            options.body = JSON.stringify(data);
+          } catch (e) {}
+        }
+      }
+      return fetch(url, options);
+    }
+
+    // اجلب توكن عند التحميل
+    fetchFreshToken();
+
+    // ============================================
+    // تسجيل الدخول
+    // ============================================
+    async function doEzziLogin() {
+      const code = document.getElementById('ezzi-code').value;
+      const msg = document.getElementById('msg');
+      
+      if (!code) { 
+        msg.style.color = '#EC4899';
+        msg.textContent = 'أدخل الرمز'; 
+        return; 
+      }
+      
+      msg.style.color = '#94A3B8';
+      msg.textContent = 'جاري التحقق...';
+      
+      try {
+        const r = await safeFetch('/api/ezzi/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        }).then(r => r.json());
+
+        if (r.ok) {
+          msg.style.color = '#10b981';
+          msg.textContent = '✓ مرحباً';
+          setTimeout(() => location.replace('/ezzi-panel'), 400);
+        } else {
+          msg.style.color = '#EC4899';
+          msg.textContent = '✗ ' + r.error;
+        }
+      } catch (e) {
+        msg.style.color = '#EC4899';
+        msg.textContent = '✗ ' + e.message;
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doEzziLogin();
+    });
+  </script>
+</body>
+</html>
